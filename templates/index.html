@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoGrab - वीडियो डाउनलोडर</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Segoe UI', sans-serif;
+        }
+        
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --gray: #6c757d;
+        }
+        
+        body {
+            background: linear-gradient(120deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .logo i {
+            color: var(--accent);
+        }
+        
+        .nav {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .nav a {
+            text-decoration: none;
+            color: var(--gray);
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav a:hover {
+            color: var(--primary);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+        
+        .tagline {
+            color: var(--gray);
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        
+        .features {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 40px 0;
+        }
+        
+        .feature {
+            flex: 1;
+            min-width: 250px;
+            background: var(--light);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
+        }
+        
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .feature h3 {
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 30px;
+        }
+        
+        .input-with-icon {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray);
+        }
+        
+        input[type="url"] {
+            padding: 18px 20px 18px 50px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 16px;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="url"]:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .download-btn {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+        
+        .platforms {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .platform {
+            background: var(--light);
+            padding: 12px 25px;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: var(--gray);
+            border: 1px solid #e9ecef;
+        }
+        
+        .platform i {
+            color: var(--primary);
+        }
+        
+        .result {
+            margin-top: 40px;
+            padding: 30px;
+            border-radius: 15px;
+            background: var(--light);
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .download-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .option-btn {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: var(--dark);
+            text-decoration: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+            border: 1px solid #e9ecef;
+            cursor: pointer;
+        }
+        
+        .option-btn:hover {
+            transform: translateY(-3px);
+            color: var(--primary);
+        }
+        
+        .loading {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 50px 0 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-weight: 500;
+        }
+        
+        footer {
+            width: 100%;
+            max-width: 1200px;
+            margin-top: auto;
+            padding: 30px 0;
+            color: var(--gray);
+            text-align: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .social-links a {
+            color: var(--gray);
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+        
+        .social-links a:hover {
+            color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .nav {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .container {
+                padding: 25px;
+            }
+            
+            .feature {
+                min-width: 100%;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+            }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .notification.error {
+            border-left: 4px solid var(--accent);
+        }
+        
+        .how-it-works {
+            margin: 50px 0;
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .step {
+            flex: 1;
+            min-width: 250px;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin: 0 auto 15px;
+        }
+        
+        .step-content {
+            background: var(--light);
+            padding: 25px;
+            border-radius: 15px;
+            height: 100%;
+        }
+
+        .video-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .video-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+
+        .video-thumbnail {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-download"></i>
+            <span>VideoGrab</span>
+        </div>
+        <div class="nav">
+            <a href="#">होम</a>
+            <a href="#">कैसे काम करता है</a>
+            <a href="#">समर्थित साइट्स</a>
+            <a href="#">संपर्क</a>
+            <a href="#">प्रीमियम</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h1>वीडियो डाउनलोड करें एक क्लिक में</h1>
+        <p class="tagline">1000+ वेबसाइटों से वीडियो डाउनलोड करें। तेज़, मुफ़्त और कोई रजिस्ट्रेशन नहीं!</p>
+        
+        <div class="input-group">
+            <div class="input-with-icon">
+                <i class="fas fa-link"></i>
+                <input type="url" id="videoUrl" placeholder="वीडियो लिंक यहाँ पेस्ट करें (जैसे: YouTube, Facebook, Instagram...)">
+            </div>
+            <button class="download-btn" onclick="processUrl()">
+                <i class="fas fa-download"></i>
+                डाउनलोड शुरू करें
+            </button>
+        </div>
+        
+        <div class="platforms">
+            <div class="platform">
+                <i class="fab fa-youtube"></i>
+                YouTube
+            </div>
+            <div class="platform">
+                <i class="fab fa-facebook"></i>
+                Facebook
+            </div>
+            <div class="platform">
+                <i class="fab fa-instagram"></i>
+                Instagram
+            </div>
+            <div class="platform">
+                <i class="fab fa-twitter"></i>
+                Twitter
+            </div>
+            <div class="platform">
+                <i class="fab fa-tiktok"></i>
+                TikTok
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>वीडियो प्रोसेस हो रहा है... कृपया प्रतीक्षा करें</p>
+        </div>
+
+        <div id="videoInfo" class="video-info" style="display: none;">
+            <div class="video-title" id="infoTitle"></div>
+            <div>अवधि: <span id="infoDuration"></span></div>
+            <img id="infoThumbnail" class="video-thumbnail" src="" alt="Video thumbnail">
+        </div>
+        
+        <div class="result" id="result">
+            <h3>आपका वीडियो तैयार है!</h3>
+            <p>नीचे दिए गए विकल्पों में से अपनी पसंद का फॉर्मेट चुनें</p>
+            
+            <div class="download-options">
+                <a href="#" class="option-btn" data-format="best">
+                    <i class="fas fa-play-circle"></i>
+                    सर्वोत्तम गुणवत्ता
+                </a>
+                <a href="#" class="option-btn" data-format="worst">
+                    <i class="fas fa-play-circle"></i>
+                    सबसे छोटा आकार
+                </a>
+                <a href="#" class="option-btn" data-format="bestaudio">
+                    <i class="fas fa-music"></i>
+                    केवल ऑडियो (MP3)
+                </a>
+            </div>
+        </div>
+        
+        <div class="how-it-works">
+            <h2>यह कैसे काम करता है</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>लिंक कॉपी करें</h3>
+                        <p>वीडियो का URL कॉपी करें जिसे आप डाउनलोड करना चाहते हैं</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>लिंक पेस्ट करें</h3>
+                        <p>वीडियो लिंक को ऊपर दिए गए बॉक्स में पेस्ट करें</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>डाउनलोड करें</h3>
+                        <p>अपने पसंदीदा फॉर्मेट का चयन करें और डाउनलोड करें</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number">10M+</div>
+                <div class="stat-label">डाउनलोड</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">समर्थित साइट्स</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">99.9%</div>
+                <div class="stat-label">अपटाइम</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">0</div>
+                <div class="stat-label">विज्ञापन</div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="footer-content">
+            <div>© 2023 VideoGrab. सभी अधिकार सुरक्षित</div>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+            </div>
+            <div>
+                <a href="#">गोपनीयता नीति</a> | <a href="#">सेवा की शर्तें</a> | <a href="#">संपर्क</a>
+            </div>
+        </div>
+    </footer>
+    
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle" id="notification-icon"></i>
+        <div id="notification-text">सफलता की सूचना!</div>
+    </div>
+
+    <script>
+        let currentVideoUrl = '';
+        let videoInfo = {};
+
+        function processUrl() {
+            const videoUrl = document.getElementById('videoUrl').value;
+            currentVideoUrl = videoUrl;
+            
+            if (!videoUrl) {
+                showNotification('कृपया एक वैध वीडियो URL डालें', 'error');
+                return;
+            }
+            
+            // लोडिंग दिखाएं और पिछले परिणाम छिपाएं
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('videoInfo').style.display = 'none';
+            
+            // Server API call
+            fetch('/api/info', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: videoUrl })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success) {
+                    // वीडियो जानकारी दिखाएं
+                    document.getElementById('infoTitle').textContent = data.title;
+                    document.getElementById('infoDuration').textContent = formatDuration(data.duration);
+                    document.getElementById('infoThumbnail').src = data.thumbnail;
+                    document.getElementById('videoInfo').style.display = 'block';
+                    
+                    // परिणाम दिखाएं
+                    document.getElementById('result').style.display = 'block';
+                    
+                    // सफलता सूचना दिखाएं
+                    showNotification('वीडियो सफलतापूर्वक तैयार है!', 'success');
+                    
+                    // डाउनलोड बटन के लिए event listeners जोड़ें
+                    setupDownloadButtons();
+                } else {
+                    showNotification(data.message || 'वीडियो जानकारी प्राप्त करने में विफल', 'error');
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                showNotification('नेटवर्क त्रुटि: ' + error.message, 'error');
+            });
+        }
+        
+        function formatDuration(seconds) {
+            if (!seconds) return 'अज्ञात';
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+        }
+        
+        function setupDownloadButtons() {
+            const downloadButtons = document.querySelectorAll('.option-btn');
+            downloadButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const format = this.getAttribute('data-format');
+                    downloadVideo(format);
+                });
+            });
+        }
+        
+        function downloadVideo(format) {
+            if (!currentVideoUrl) {
+                showNotification('कृपया पहले एक वीडियो URL डालें', 'error');
+                return;
+            }
+            
+            showNotification('डाउनलोड शुरू हो रहा है...', 'success');
+            
+            // Server API call
+            fetch('/api/download', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: currentVideoUrl,
+                    format: format
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // डाउनलोड लिंक पर redirect करें
+                    window.location.href = data.download_url;
+                    showNotification('डाउनलोड पूर्ण हुआ!', 'success');
+                } else {
+                    showNotification('डाउनलोड असफल: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('नेटवर्क त्रुटि: ' + error.message, 'error');
+            });
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notification-text');
+            const notificationIcon = document.getElementById('notification-icon');
+            
+            notificationText.textContent = message;
+            notification.className = 'notification ' + type;
+            
+            if (type === 'success') {
+                notificationIcon.className = 'fas fa-check-circle';
+            } else {
+                notificationIcon.className = 'fas fa-exclamation-circle';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // इनपुट फ़ील्ड में एंटर दबाने पर भी काम करने के लिए
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                processUrl();
+            }
+        });
+    </script>
+</body>
+</html>
