@@ -3,10 +3,11 @@ from flask_cors import CORS
 import yt_dlp
 import os
 import uuid
-import requests
-from urllib.parse import urlparse
-import threading
 import time
+import threading
+from urllib.parse import urlparse
+import requests
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
@@ -65,23 +66,75 @@ def get_video_info(url):
         'quiet': True,
         'no_warnings': True,
         'skip_download': True,
+        'force_ipv4': True,
+        'socket_timeout': 30,
+        'extract_flat': False,
     }
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            
+            # Extract available formats
+            formats = []
+            if 'formats' in info:
+                for fmt in info['formats']:
+                    # Only include formats with both video and audio, or audio only
+                    if (fmt.get('vcodec') != 'none' and fmt.get('acodec') != 'none') or (
+                        fmt.get('vcodec') == 'none' and fmt.get('acodec') != 'none'):
+                        format_name = ""
+                        if fmt.get('height'):
+                            format_name = f"{fmt['height']}p"
+                        elif fmt.get('format_note'):
+                            format_name = fmt['format_note']
+                        else:
+                            format_name = fmt['ext'].upper()
+                            
+                        # Add audio only tag for audio formats
+                        if fmt.get('vcodec') == 'none' and fmt.get('acodec') != 'none':
+                            format_name = f"Audio ({format_name})"
+                            
+                        formats.append({
+                            'format_id': fmt['format_id'],
+                            'ext': fmt.get('ext', 'mp4'),
+                            'resolution': format_name,
+                            'filesize': fmt.get('filesize', 0)
+                        })
+            
+            # Add default format options
+            formats.insert(0, {
+                'format_id': 'best',
+                'ext': 'mp4',
+                'resolution': 'सर्वोत्तम गुणवत्ता',
+                'filesize': 0
+            })
+            
+            formats.insert(1, {
+                'format_id': 'worst',
+                'ext': 'mp4',
+                'resolution': 'सबसे छोटा आकार',
+                'filesize': 0
+            })
+            
+            formats.insert(2, {
+                'format_id': 'bestaudio/best',
+                'ext': 'mp3',
+                'resolution': 'केवल ऑडियो (MP3)',
+                'filesize': 0
+            })
+            
             return {
                 'title': info.get('title', 'Unknown Title'),
                 'duration': info.get('duration', 0),
                 'thumbnail': info.get('thumbnail', ''),
-                'formats': info.get('formats', [])
+                'formats': formats
             }
     except Exception as e:
         print(f"Error getting video info: {e}")
         return None
 
 def download_video(url, format_id='best'):
-    """Download video using yt-dlp"""
+    """Download video using yt-dlp with proper format selection"""
     # Generate unique filename
     filename = f"{str(uuid.uuid4())}.mp4"
     filepath = os.path.join(app.config['DOWNLOAD_FOLDER'], filename)
@@ -89,13 +142,33 @@ def download_video(url, format_id='best'):
     ydl_opts = {
         'outtmpl': filepath,
         'format': format_id,
+        'merge_output_format': 'mp4',
         'quiet': True,
+        'no_warnings': True,
+        'force_ipv4': True,
+        'socket_timeout': 30,
+        'postprocessor_args': ['-threads', '4'],
     }
+    
+    # For audio-only downloads
+    if 'audio' in format_id:
+        ydl_opts['postprocessors'] = [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
+        filename = f"{str(uuid.uuid4())}.mp3"
+        filepath = os.path.join(app.config['DOWNLOAD_FOLDER'], filename)
+        ydl_opts['outtmpl'] = filepath
     
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-        return filepath
+        
+        # Check if file was created
+        if os.path.exists(filepath):
+            return filepath
+        return None
     except Exception as e:
         print(f"Download error: {e}")
         # Clean up if file was partially downloaded
@@ -133,6 +206,7 @@ def get_info():
         'title': video_info['title'],
         'duration': video_info['duration'],
         'thumbnail': video_info['thumbnail'],
+        'formats': video_info['formats']
     })
 
 @app.route('/api/download', methods=['POST'])
@@ -155,7 +229,7 @@ def download():
     filepath = download_video(url, format_id)
     
     if not filepath or not os.path.exists(filepath):
-        return jsonify({'success': False, 'message': 'Download failed'})
+        return jsonify({'success': False, 'message': 'Download failed. The video may be restricted or unavailable.'})
     
     filename = os.path.basename(filepath)
     return jsonify({
@@ -172,11 +246,17 @@ def download_file(filename):
     if not os.path.exists(filepath):
         return "File not found", 404
     
+    # Determine download name
+    if filename.endswith('.mp3'):
+        download_name = f"audio_{filename.split('.')[0]}.mp3"
+    else:
+        download_name = f"video_{filename.split('.')[0]}.mp4"
+    
     # Send file for download
     return send_file(
         filepath,
         as_attachment=True,
-        download_name=f"video_{filename.split('.')[0]}.mp4"
+        download_name=download_name
     )
 
 @app.errorhandler(413)

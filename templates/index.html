@@ -508,6 +508,7 @@
         <div id="videoInfo" class="video-info" style="display: none;">
             <div class="video-title" id="infoTitle"></div>
             <div>अवधि: <span id="infoDuration"></span></div>
+            <div>फॉर्मेट: <span id="infoFormat"></span></div>
             <img id="infoThumbnail" class="video-thumbnail" src="" alt="Video thumbnail">
         </div>
         
@@ -515,19 +516,8 @@
             <h3>आपका वीडियो तैयार है!</h3>
             <p>नीचे दिए गए विकल्पों में से अपनी पसंद का फॉर्मेट चुनें</p>
             
-            <div class="download-options">
-                <a href="#" class="option-btn" data-format="best">
-                    <i class="fas fa-play-circle"></i>
-                    सर्वोत्तम गुणवत्ता
-                </a>
-                <a href="#" class="option-btn" data-format="worst">
-                    <i class="fas fa-play-circle"></i>
-                    सबसे छोटा आकार
-                </a>
-                <a href="#" class="option-btn" data-format="bestaudio">
-                    <i class="fas fa-music"></i>
-                    केवल ऑडियो (MP3)
-                </a>
+            <div class="download-options" id="formatOptions">
+                <!-- यहाँ JavaScript के द्वारा फॉर्मेट विकल्प जोड़े जाएँगे -->
             </div>
         </div>
         
@@ -600,7 +590,7 @@
 
     <script>
         let currentVideoUrl = '';
-        let videoInfo = {};
+        let availableFormats = [];
 
         function processUrl() {
             const videoUrl = document.getElementById('videoUrl').value;
@@ -635,14 +625,14 @@
                     document.getElementById('infoThumbnail').src = data.thumbnail;
                     document.getElementById('videoInfo').style.display = 'block';
                     
+                    // उपलब्ध फॉर्मेट्स दिखाएं
+                    displayFormatOptions(data.formats || []);
+                    
                     // परिणाम दिखाएं
                     document.getElementById('result').style.display = 'block';
                     
                     // सफलता सूचना दिखाएं
                     showNotification('वीडियो सफलतापूर्वक तैयार है!', 'success');
-                    
-                    // डाउनलोड बटन के लिए event listeners जोड़ें
-                    setupDownloadButtons();
                 } else {
                     showNotification(data.message || 'वीडियो जानकारी प्राप्त करने में विफल', 'error');
                 }
@@ -653,22 +643,52 @@
             });
         }
         
+        function displayFormatOptions(formats) {
+            const formatOptionsDiv = document.getElementById('formatOptions');
+            formatOptionsDiv.innerHTML = '';
+            
+            // डिफ़ॉल्ट विकल्प जोड़ें
+            const defaultOptions = [
+                { id: 'best', name: 'सर्वोत्तम गुणवत्ता', icon: 'play-circle' },
+                { id: 'worst', name: 'सबसे छोटा आकार', icon: 'play-circle' },
+                { id: 'bestaudio', name: 'केवल ऑडियो (MP3)', icon: 'music' }
+            ];
+            
+            defaultOptions.forEach(option => {
+                const button = document.createElement('a');
+                button.href = '#';
+                button.className = 'option-btn';
+                button.setAttribute('data-format', option.id);
+                button.innerHTML = `<i class="fas fa-${option.icon}"></i> ${option.name}`;
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    downloadVideo(option.id);
+                });
+                formatOptionsDiv.appendChild(button);
+            });
+            
+            // अतिरिक्त फॉर्मेट विकल्प जोड़ें (यदि उपलब्ध हैं)
+            if (formats.length > 0) {
+                formats.forEach(format => {
+                    const button = document.createElement('a');
+                    button.href = '#';
+                    button.className = 'option-btn';
+                    button.setAttribute('data-format', format.format_id);
+                    button.innerHTML = `<i class="fas fa-download"></i> ${format.resolution} (${format.ext.toUpperCase()})`;
+                    button.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        downloadVideo(format.format_id);
+                    });
+                    formatOptionsDiv.appendChild(button);
+                });
+            }
+        }
+        
         function formatDuration(seconds) {
             if (!seconds) return 'अज्ञात';
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = seconds % 60;
             return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
-        }
-        
-        function setupDownloadButtons() {
-            const downloadButtons = document.querySelectorAll('.option-btn');
-            downloadButtons.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const format = this.getAttribute('data-format');
-                    downloadVideo(format);
-                });
-            });
         }
         
         function downloadVideo(format) {
